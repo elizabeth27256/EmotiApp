@@ -1,6 +1,6 @@
 package com.pucetec.emotiapp.controllers
 
-import com.pucetec.emotiapp.models.requests.EmotionRequest
+import com.pucetec.emotiapp.models.request.EmotionRequest
 import com.pucetec.emotiapp.models.responses.EmotionResponse
 import com.pucetec.emotiapp.services.EmotionService
 import org.springframework.web.bind.annotation.*
