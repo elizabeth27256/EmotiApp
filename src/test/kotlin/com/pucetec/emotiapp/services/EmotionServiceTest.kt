@@ -1,5 +1,7 @@
 package com.pucetec.emotiapp.services
 
+import com.pucetec.emotiapp.exceptions.EmotionAlreadyExistsException
+import com.pucetec.emotiapp.exceptions.EmotionNotFoundException
 import com.pucetec.emotiapp.mappers.EmotionMapper
 import com.pucetec.emotiapp.models.entities.Emotion
 import com.pucetec.emotiapp.models.request.EmotionRequest
@@ -26,16 +28,8 @@ class EmotionServiceTest {
 
     @Test
     fun `save should create emotion successfully`() {
-        val request = EmotionRequest(
-            name = "Happy",
-            description = "Feeling good",
-            level = 5
-        )
-        val emotion = Emotion(
-            name = "Happy",
-            description = "Feeling good",
-            level = 5
-        )
+        val request = EmotionRequest(name = "Happy")
+        val emotion = Emotion(name = "Happy")
         emotion.id = 1L
 
         `when`(emotionRepository.findByName("Happy")).thenReturn(null)
@@ -45,31 +39,29 @@ class EmotionServiceTest {
 
         assertNotNull(response)
         assertEquals("Happy", response.name)
-        assertEquals("Feeling good", response.description)
-        assertEquals(5, response.level)
         verify(emotionRepository, times(1)).findByName("Happy")
         verify(emotionRepository, times(1)).save(any(Emotion::class.java))
     }
 
     @Test
-    fun `save should throw exception when emotion already exists`() {
-        val request = EmotionRequest(name = "Happy", description = "Test", level = 5)
-        val existingEmotion = Emotion(name = "Happy", description = "Test", level = 5)
+    fun `save should throw EmotionAlreadyExistsException when emotion already exists`() {
+        val request = EmotionRequest(name = "Happy")
+        val existingEmotion = Emotion(name = "Happy")
 
         `when`(emotionRepository.findByName("Happy")).thenReturn(existingEmotion)
 
-        val exception = assertThrows<RuntimeException> {
+        val exception = assertThrows<EmotionAlreadyExistsException> {
             emotionService.save(request)
         }
-        assertEquals("Emotion already exists", exception.message)
+        assertEquals("Emotion with name 'Happy' already exists", exception.message)
         verify(emotionRepository, never()).save(any(Emotion::class.java))
     }
 
     @Test
     fun `findAll should return all emotions`() {
         val emotions = listOf(
-            Emotion(name = "Happy", description = "Good", level = 5).apply { id = 1L },
-            Emotion(name = "Sad", description = "Bad", level = 2).apply { id = 2L }
+            Emotion(name = "Happy").apply { id = 1L },
+            Emotion(name = "Sad").apply { id = 2L }
         )
 
         `when`(emotionRepository.findAll()).thenReturn(emotions)
@@ -84,7 +76,7 @@ class EmotionServiceTest {
 
     @Test
     fun `findById should return emotion when exists`() {
-        val emotion = Emotion(name = "Happy", description = "Good", level = 5).apply { id = 1L }
+        val emotion = Emotion(name = "Happy").apply { id = 1L }
 
         `when`(emotionRepository.findById(1L)).thenReturn(Optional.of(emotion))
 
@@ -97,20 +89,20 @@ class EmotionServiceTest {
     }
 
     @Test
-    fun `findById should throw exception when not found`() {
+    fun `findById should throw EmotionNotFoundException when not found`() {
         `when`(emotionRepository.findById(1L)).thenReturn(Optional.empty())
 
-        val exception = assertThrows<RuntimeException> {
+        val exception = assertThrows<EmotionNotFoundException> {
             emotionService.findById(1L)
         }
-        assertEquals("Emotion not found", exception.message)
+        assertEquals("Emotion not found with id: 1", exception.message)
     }
 
     @Test
     fun `update should update emotion successfully`() {
-        val request = EmotionRequest(name = "Very Happy", description = "Very good", level = 10)
-        val emotion = Emotion(name = "Happy", description = "Good", level = 5).apply { id = 1L }
-        val updatedEmotion = Emotion(name = "Very Happy", description = "Very good", level = 10).apply { id = 1L }
+        val request = EmotionRequest(name = "Very Happy")
+        val emotion = Emotion(name = "Happy").apply { id = 1L }
+        val updatedEmotion = Emotion(name = "Very Happy").apply { id = 1L }
 
         `when`(emotionRepository.findById(1L)).thenReturn(Optional.of(emotion))
         `when`(emotionRepository.save(emotion)).thenReturn(updatedEmotion)
@@ -118,26 +110,24 @@ class EmotionServiceTest {
         val response = emotionService.update(1L, request)
 
         assertEquals("Very Happy", response.name)
-        assertEquals("Very good", response.description)
-        assertEquals(10, response.level)
         verify(emotionRepository, times(1)).save(emotion)
     }
 
     @Test
-    fun `update should throw exception when emotion not found`() {
-        val request = EmotionRequest(name = "Happy", description = "Good", level = 5)
+    fun `update should throw EmotionNotFoundException when emotion not found`() {
+        val request = EmotionRequest(name = "Happy")
 
         `when`(emotionRepository.findById(1L)).thenReturn(Optional.empty())
 
-        val exception = assertThrows<RuntimeException> {
+        val exception = assertThrows<EmotionNotFoundException> {
             emotionService.update(1L, request)
         }
-        assertEquals("Emotion not found", exception.message)
+        assertEquals("Emotion not found with id: 1", exception.message)
     }
 
     @Test
     fun `delete should delete emotion when exists`() {
-        val emotion = Emotion(name = "Happy", description = "Good", level = 5).apply { id = 1L }
+        val emotion = Emotion(name = "Happy").apply { id = 1L }
 
         `when`(emotionRepository.findById(1L)).thenReturn(Optional.of(emotion))
 
@@ -147,13 +137,13 @@ class EmotionServiceTest {
     }
 
     @Test
-    fun `delete should throw exception when emotion not found`() {
+    fun `delete should throw EmotionNotFoundException when emotion not found`() {
         `when`(emotionRepository.findById(1L)).thenReturn(Optional.empty())
 
-        val exception = assertThrows<RuntimeException> {
+        val exception = assertThrows<EmotionNotFoundException> {
             emotionService.delete(1L)
         }
-        assertEquals("Emotion not found", exception.message)
+        assertEquals("Emotion not found with id: 1", exception.message)
         verify(emotionRepository, never()).delete(any(Emotion::class.java))
     }
 }

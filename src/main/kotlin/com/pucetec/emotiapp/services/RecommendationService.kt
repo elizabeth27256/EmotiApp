@@ -1,6 +1,10 @@
 package com.pucetec.emotiapp.services
 
+import com.pucetec.emotiapp.exceptions.EmotionNotFoundException
+import com.pucetec.emotiapp.exceptions.InvalidRecommendationException
+import com.pucetec.emotiapp.exceptions.RecommendationNotFoundException
 import com.pucetec.emotiapp.mappers.RecommendationMapper
+import com.pucetec.emotiapp.models.entities.Recommendation
 import com.pucetec.emotiapp.models.entities.RecommendationType
 import com.pucetec.emotiapp.models.request.RecommendationRequest
 import com.pucetec.emotiapp.models.responses.RecommendationResponse
@@ -15,12 +19,15 @@ class RecommendationService(
     private val recommendationMapper: RecommendationMapper
 ) {
 
+    // ============================================
+    // CRUD Básico
+    // ============================================
+
     fun save(emotionId: Long, request: RecommendationRequest): RecommendationResponse {
-        val emotion = emotionRepository.findById(emotionId)
-            .orElseThrow { RuntimeException("Emotion not found") }
+        val emotion = validateAndGetEmotion(emotionId)
 
         if (request.type == RecommendationType.EXERCISE && request.durationMinutes == null) {
-            throw RuntimeException("Duration is required for EXERCISE recommendations")
+            throw InvalidRecommendationException("Duration is required for EXERCISE recommendations")
         }
 
         val recommendation = recommendationMapper.toEntity(request, emotion)
@@ -30,33 +37,62 @@ class RecommendationService(
     }
 
     fun findById(id: Long): RecommendationResponse {
-        val recommendation = recommendationRepository.findById(id)
-            .orElseThrow { RuntimeException("Recommendation not found") }
+        val recommendation = getRecommendationEntityById(id)
         return recommendationMapper.toResponse(recommendation)
     }
 
     fun findByEmotionId(emotionId: Long): List<RecommendationResponse> {
-        emotionRepository.findById(emotionId)
-            .orElseThrow { RuntimeException("Emotion not found") }
+        validateAndGetEmotion(emotionId) // Reutilizamos para validar
         return recommendationRepository.findByEmotionId(emotionId)
             .map { recommendationMapper.toResponse(it) }
     }
 
-    fun findByType(type: RecommendationType): List<RecommendationResponse> {
-        return recommendationRepository.findByType(type)
-            .map { recommendationMapper.toResponse(it) }
-    }
-
-    fun findByEmotionIdAndType(emotionId: Long, type: RecommendationType): List<RecommendationResponse> {
-        emotionRepository.findById(emotionId)
-            .orElseThrow { RuntimeException("Emotion not found") }
-        return recommendationRepository.findByEmotionIdAndType(emotionId, type)
-            .map { recommendationMapper.toResponse(it) }
-    }
-
     fun delete(id: Long) {
-        val recommendation = recommendationRepository.findById(id)
-            .orElseThrow { RuntimeException("Recommendation not found") }
+        val recommendation = getRecommendationEntityById(id)
         recommendationRepository.delete(recommendation)
     }
+
+    // ============================================
+    // Aleatorización (Core de la App)
+    // ============================================
+
+    fun getUniqueRandomByEmotionIdAndType(
+        emotionId: Long,
+        type: RecommendationType,
+        excludeIds: List<Long> = emptyList()
+    ): RecommendationResponse {
+        validateAndGetEmotion(emotionId)
+
+        val allRecommendations = recommendationRepository.findByEmotionIdAndType(emotionId, type)
+
+        if (allRecommendations.isEmpty()) {
+            throw RecommendationNotFoundException(
+                "No recommendations of type $type found for emotion with id $emotionId"
+            )
+        }
+
+        val unseenRecommendations = allRecommendations.filter { it.id !in excludeIds }
+
+        // Si ya vio todas, reiniciamos el ciclo para que no se quede sin contenido
+        val availableRecommendations = unseenRecommendations.ifEmpty { allRecommendations }
+
+        return recommendationMapper.toResponse(availableRecommendations.random())
+    }
+
+    // ============================================
+    // Consultas de Entidades (Para otros servicios)
+    // ============================================
+
+    fun getRecommendationEntityById(id: Long): Recommendation {
+        return recommendationRepository.findById(id)
+            .orElseThrow { RecommendationNotFoundException("Recommendation with id $id not found") }
+    }
+
+    // ============================================
+    // Helpers Privados
+    // ============================================
+
+    private fun validateAndGetEmotion(emotionId: Long) =
+        emotionRepository.findById(emotionId)
+            .orElseThrow { EmotionNotFoundException("Emotion with id $emotionId not found") }
 }

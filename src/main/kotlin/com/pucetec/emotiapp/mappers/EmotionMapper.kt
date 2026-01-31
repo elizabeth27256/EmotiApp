@@ -11,8 +11,6 @@ class EmotionMapper {
     fun toEntity(request: EmotionRequest): Emotion {
         return Emotion(
             name = request.name,
-            description = request.description,
-            level = request.level
         )
     }
 
@@ -20,8 +18,6 @@ class EmotionMapper {
         return EmotionResponse(
             id = emotion.id,
             name = emotion.name,
-            description = emotion.description,
-            level = emotion.level
         )
     }
 }

@@ -9,19 +9,19 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/emotions")
 class EmotionController(private val emotionService: EmotionService) {
 
-    // CREATE
+    // Create
     @PostMapping
     fun save(@RequestBody emotion: EmotionRequest): EmotionResponse {
         return emotionService.save(emotion)
     }
 
-    // READ all
+    // Busca todas las emociones
     @GetMapping
     fun findAll(): List<EmotionResponse> {
         return emotionService.findAll()
     }
 
-    // READ by ID
+    // Busca por el id de la emoicion
     @GetMapping("/{id}")
     fun findById(@PathVariable id: Long): EmotionResponse {
         return emotionService.findById(id)

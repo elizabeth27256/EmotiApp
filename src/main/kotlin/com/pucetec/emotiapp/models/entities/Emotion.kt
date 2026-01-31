@@ -11,10 +11,4 @@ class Emotion(
     @Column(nullable = false)
     var name: String,
 
-    @Column(nullable = false)
-    var description: String,
-
-    @Column(nullable = false)
-    var level: Int
-
 ) : BaseEntity()

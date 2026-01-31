@@ -2,9 +2,9 @@ package com.pucetec.emotiapp.models.responses
 
 import java.time.LocalDateTime
 
-data class UserResponse(
+data class EmotionSelectionResponse(
     val id: Long,
-    val userIdentifier: String,
+    val username: String,
     val emotionId: Long,
     val emotionName: String,
     val recommendationId: Long?,
