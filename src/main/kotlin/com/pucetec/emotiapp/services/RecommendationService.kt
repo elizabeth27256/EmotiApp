@@ -19,10 +19,6 @@ class RecommendationService(
     private val recommendationMapper: RecommendationMapper
 ) {
 
-    // ============================================
-    // CRUD Básico
-    // ============================================
-
     fun save(emotionId: Long, request: RecommendationRequest): RecommendationResponse {
         val emotion = validateAndGetEmotion(emotionId)
 
@@ -52,9 +48,7 @@ class RecommendationService(
         recommendationRepository.delete(recommendation)
     }
 
-    // ============================================
     // Aleatorización (Core de la App)
-    // ============================================
 
     fun getUniqueRandomByEmotionIdAndType(
         emotionId: Long,
@@ -79,18 +73,10 @@ class RecommendationService(
         return recommendationMapper.toResponse(availableRecommendations.random())
     }
 
-    // ============================================
-    // Consultas de Entidades (Para otros servicios)
-    // ============================================
-
     fun getRecommendationEntityById(id: Long): Recommendation {
         return recommendationRepository.findById(id)
             .orElseThrow { RecommendationNotFoundException("Recommendation with id $id not found") }
     }
-
-    // ============================================
-    // Helpers Privados
-    // ============================================
 
     private fun validateAndGetEmotion(emotionId: Long) =
         emotionRepository.findById(emotionId)

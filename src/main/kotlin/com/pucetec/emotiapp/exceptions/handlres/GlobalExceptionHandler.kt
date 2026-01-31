@@ -11,9 +11,7 @@ import java.time.LocalDateTime
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
-    // ============================================
     // NOT FOUND (404)
-    // ============================================
 
     @ExceptionHandler(UserNotFoundException::class)
     fun handleUserNotFoundException(
@@ -71,10 +69,7 @@ class GlobalExceptionHandler {
         return ResponseEntity(error, HttpStatus.NOT_FOUND)
     }
 
-    // ============================================
     // BAD REQUEST (400)
-    // ============================================
-
     @ExceptionHandler(InvalidUserException::class)
     fun handleInvalidUserException(
         ex: InvalidUserException,
@@ -103,9 +98,7 @@ class GlobalExceptionHandler {
         return ResponseEntity(error, HttpStatus.BAD_REQUEST)
     }
 
-    // ============================================
     // CONFLICT (409)
-    // ============================================
 
     @ExceptionHandler(UserAlreadyExistsException::class)
     fun handleUserAlreadyExistsException(
@@ -121,9 +114,7 @@ class GlobalExceptionHandler {
         return ResponseEntity(error, HttpStatus.CONFLICT)
     }
 
-    // ============================================
     // INTERNAL SERVER ERROR (500)
-    // ============================================
 
     @ExceptionHandler(Exception::class)
     fun handleGlobalException(
@@ -140,9 +131,7 @@ class GlobalExceptionHandler {
     }
 }
 
-// ========================================
 // ERROR RESPONSE DTO
-// ========================================
 
 data class ErrorResponse(
     val timestamp: LocalDateTime = LocalDateTime.now(),

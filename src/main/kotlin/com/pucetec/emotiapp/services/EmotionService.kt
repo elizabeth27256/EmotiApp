@@ -30,13 +30,13 @@ class EmotionService(
 
     fun findById(id: Long): EmotionResponse {
         val emotion = emotionRepository.findById(id)
-            .orElseThrow { EmotionNotFoundException("Emotion not found with id: $id") }  // ✅ CORREGIDO
+            .orElseThrow { EmotionNotFoundException("Emotion not found with id: $id") }
         return emotionMapper.toResponse(emotion)
     }
 
     fun update(id: Long, request: EmotionRequest): EmotionResponse {
         val emotion = emotionRepository.findById(id)
-            .orElseThrow { EmotionNotFoundException("Emotion not found with id: $id") }  // ✅ CORREGIDO
+            .orElseThrow { EmotionNotFoundException("Emotion not found with id: $id") }
         emotion.name = request.name
         val updated = emotionRepository.save(emotion)
         return emotionMapper.toResponse(updated)
