@@ -8,19 +8,21 @@ import org.springframework.stereotype.Component
 @Component
 class UsersMapper {
 
-    fun toEntity(request: RegisterRequest, password: String): Users {
+    // 🔹 Request → Entity
+    fun toEntity(request: RegisterRequest): Users {
         return Users(
             username = request.username,
             email = request.email,
-            password = password
+            password = request.password
         )
     }
 
+    // 🔹 Entity → Response
     fun toResponse(user: Users): UsersResponse {
         return UsersResponse(
             id = user.id,
             username = user.username,
-            email = user.email,
+            email = user.email
         )
     }
 }

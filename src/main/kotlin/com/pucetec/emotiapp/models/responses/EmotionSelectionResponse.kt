@@ -8,5 +8,13 @@ data class EmotionSelectionResponse(
     val emotionId: Long,
     val emotionName: String,
     val recommendationId: Long?,
-    val selectedAt: LocalDateTime
+    val selectedAt: LocalDateTime,
+    val recommendation: RecommendationData? = null
+)
+
+data class RecommendationData(
+    val id: Long,
+    val type: String,
+    val content: String,
+    val durationMinutes: Int?
 )

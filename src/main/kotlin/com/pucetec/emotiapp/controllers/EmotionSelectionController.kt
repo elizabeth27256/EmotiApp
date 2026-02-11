@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 
+@CrossOrigin(origins = ["http://localhost:8100"])
 @RestController
 @RequestMapping("/api/selections")
 class EmotionSelectionController(private val emotionSelectionService: EmotionSelectionService) {

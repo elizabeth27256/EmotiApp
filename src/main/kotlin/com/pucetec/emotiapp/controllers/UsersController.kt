@@ -1,11 +1,13 @@
 package com.pucetec.emotiapp.controllers
 
+import com.pucetec.emotiapp.models.request.LoginRequest
 import com.pucetec.emotiapp.models.request.RegisterRequest
 import com.pucetec.emotiapp.models.responses.UsersResponse
 import com.pucetec.emotiapp.services.UsersService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
+@CrossOrigin(origins = ["http://localhost:8100"])
 @RestController
 @RequestMapping("/api/users")
 class UsersController(private val usersService: UsersService) {
@@ -14,6 +16,11 @@ class UsersController(private val usersService: UsersService) {
     @ResponseStatus(HttpStatus.CREATED)
     fun register(@RequestBody request: RegisterRequest): UsersResponse {
         return usersService.register(request)
+    }
+
+    @PostMapping("/login")
+    fun login(@RequestBody request: LoginRequest): UsersResponse {
+        return usersService.login(request)
     }
 
     @GetMapping("/{id}")

@@ -4,7 +4,6 @@ import com.pucetec.emotiapp.exceptions.EmotionNotFoundException
 import com.pucetec.emotiapp.exceptions.EmotionSelectionNotFoundException
 import com.pucetec.emotiapp.exceptions.UserNotFoundException
 import com.pucetec.emotiapp.mappers.EmotionSelectionMapper
-import com.pucetec.emotiapp.models.entities.RecommendationType
 import com.pucetec.emotiapp.models.request.EmotionSelectionRequest
 import com.pucetec.emotiapp.models.responses.EmotionSelectionResponse
 import com.pucetec.emotiapp.repositories.EmotionRepository
@@ -23,60 +22,74 @@ class EmotionSelectionService(
 ) {
 
     fun save(userId: Long, request: EmotionSelectionRequest): EmotionSelectionResponse {
-        val user = usersRepository.findById(userId).orElse(null)
-            ?: throw UserNotFoundException("User with id $userId not found")
 
-        val emotion = emotionRepository.findById(request.emotionId).orElse(null)
-            ?: throw EmotionNotFoundException("Emotion with id ${request.emotionId} not found")
+        val user = usersRepository.findById(userId)
+            .orElseThrow { UserNotFoundException("User with id $userId not found") }
 
-        // Obtener IDs de recomendaciones ya vistas por este usuario para esta emoción
-        val seenRecommendationIds = emotionSelectionRepository
-            .findByUserIdAndEmotionId(userId, emotion.id)
-            .map { it.recommendation.id }
+        val emotion = emotionRepository.findById(request.emotionId)
+            .orElseThrow { EmotionNotFoundException("Emotion with id ${request.emotionId} not found") }
 
-        // Obtener recomendación única (sin repetir)
-        val recommendationResponse = recommendationService.getUniqueRandomByEmotionIdAndType(
-            emotionId = emotion.id,
-            type = request.type,
-            excludeIds = seenRecommendationIds
-        )
+        // ✅ Obtener IDs de recomendaciones ya vistas
+        val seenRecommendationIds =
+            emotionSelectionRepository.findSeenRecommendationIds(
+                userId = userId,
+                emotionId = emotion.id
+            )
 
-        // Convertir Response a Entity
-        val recommendation = recommendationService.getRecommendationEntityById(recommendationResponse.id)
+        // ✅ Obtener recomendación única aleatoria
+        val recommendationResponse =
+            recommendationService.getUniqueRandomByEmotionIdAndType(
+                emotionId = emotion.id,
+                type = request.recommendationType,
+                excludeIds = seenRecommendationIds
+            )
 
-        val selection = emotionSelectionMapper.toEntity(user, emotion, recommendation)
-        val savedSelection = emotionSelectionRepository.save(selection)
+        val recommendation =
+            recommendationService.getRecommendationEntityById(recommendationResponse.id)
 
-        return emotionSelectionMapper.toResponse(savedSelection)
+        val selection =
+            emotionSelectionMapper.toEntity(user, emotion, recommendation)
+
+        val saved = emotionSelectionRepository.save(selection)
+
+        return emotionSelectionMapper.toResponse(saved)
     }
 
-    fun findById(id: Long): EmotionSelectionResponse {
-        val selection = emotionSelectionRepository.findById(id).orElse(null)
-            ?: throw EmotionSelectionNotFoundException("Selection with id $id not found")
-        return emotionSelectionMapper.toResponse(selection)
-    }
+    fun findById(id: Long): EmotionSelectionResponse =
+        emotionSelectionRepository.findById(id)
+            .orElseThrow {
+                EmotionSelectionNotFoundException("Selection with id $id not found")
+            }
+            .let { emotionSelectionMapper.toResponse(it) }
 
-    fun findByUserId(userId: Long, afterDate: LocalDateTime?): List<EmotionSelectionResponse> {
-        usersRepository.findById(userId).orElse(null)
-            ?: throw UserNotFoundException("User with id $userId not found")
+    fun findByUserId(
+        userId: Long,
+        afterDate: LocalDateTime?
+    ): List<EmotionSelectionResponse> {
 
-        val selections = if (afterDate != null) {
-            emotionSelectionRepository.findByUserIdAndSelectedAtAfter(userId, afterDate)
-        } else {
+        usersRepository.findById(userId)
+            .orElseThrow { UserNotFoundException("User with id $userId not found") }
+
+        // 🔑 Ahora obtenemos las entidades y las mapeamos
+        val selections = if (afterDate == null) {
             emotionSelectionRepository.findByUserId(userId)
+        } else {
+            emotionSelectionRepository.findByUserIdAndSelectedAtAfter(userId, afterDate)
         }
 
         return selections.map { emotionSelectionMapper.toResponse(it) }
     }
 
-    fun findAll(): List<EmotionSelectionResponse> {
-        return emotionSelectionRepository.findAll()
+    fun findAll(): List<EmotionSelectionResponse> =
+        emotionSelectionRepository.findAll()
             .map { emotionSelectionMapper.toResponse(it) }
-    }
 
     fun delete(id: Long) {
-        val selection = emotionSelectionRepository.findById(id).orElse(null)
-            ?: throw EmotionSelectionNotFoundException("Selection with id $id not found")
+        val selection = emotionSelectionRepository.findById(id)
+            .orElseThrow {
+                EmotionSelectionNotFoundException("Selection with id $id not found")
+            }
+
         emotionSelectionRepository.delete(selection)
     }
 }

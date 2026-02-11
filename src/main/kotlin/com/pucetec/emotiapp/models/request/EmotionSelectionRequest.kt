@@ -4,5 +4,5 @@ import com.pucetec.emotiapp.models.entities.RecommendationType
 
 data class EmotionSelectionRequest(
     val emotionId: Long,
-    val type: RecommendationType
+    val recommendationType: RecommendationType
 )

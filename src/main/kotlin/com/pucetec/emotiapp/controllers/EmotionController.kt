@@ -5,6 +5,7 @@ import com.pucetec.emotiapp.models.responses.EmotionResponse
 import com.pucetec.emotiapp.services.EmotionService
 import org.springframework.web.bind.annotation.*
 
+@CrossOrigin(origins = ["http://localhost:8100"])
 @RestController
 @RequestMapping("/api/emotions")
 class EmotionController(private val emotionService: EmotionService) {
